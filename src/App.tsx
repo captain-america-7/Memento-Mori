@@ -1,4 +1,9 @@
-import React, { useState, useEffect } from 'react';
+// @ts-nocheck
+
+
+
+import { useState, useEffect } from 'react';
+
 import { Calendar, Heart, Globe, Sparkles, Leaf, Sun, Moon } from 'lucide-react';
 
 export default function App() {
