@@ -44,9 +44,17 @@ export default function App() {
     if (darkPreference) setDarkMode(darkPreference === 'true');
   }, []);
 
+  // Helper function to get current time in IST (UTC+5:30)
+  const getISTTime = () => {
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const ist = new Date(utc + (5.5 * 3600000)); // IST is UTC+5:30
+    return ist;
+  };
+
   const calculateLifeData = (birth, expectancy) => {
     const birthDateTime = new Date(birth);
-    const now = new Date();
+    const now = getISTTime();
     const msPerWeek = 7 * 24 * 60 * 60 * 1000;
     const msPerDay = 24 * 60 * 60 * 1000;
     const msPerYear = 365.25 * msPerDay;
@@ -183,7 +191,10 @@ export default function App() {
   const getWeekDate = (weekNum) => {
     const weekMs = weekNum * 7 * 24 * 60 * 60 * 1000;
     const weekDate = new Date(lifeData.birthDate.getTime() + weekMs);
-    return weekDate;
+    // Convert to IST for display
+    const utc = weekDate.getTime() + (weekDate.getTimezoneOffset() * 60000);
+    const ist = new Date(utc + (5.5 * 3600000));
+    return ist;
   };
 
   const renderWeeksGrid = () => {
@@ -285,7 +296,7 @@ export default function App() {
                 id="birthdate"
                 value={birthDate}
                 onChange={(e) => setBirthDate(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
+                max={getISTTime().toISOString().split('T')[0]}
                 className={`w-full px-4 py-3 sm:py-4 border ${borderClass} ${textPrimaryClass} ${cardBgClass} text-sm sm:text-base font-normal rounded-xl focus:outline-none focus:ring-2 ${darkMode ? 'focus:ring-white' : 'focus:ring-black'} transition-all`}
               />
               <p className={`mt-2 text-xs ${textSecondaryClass} font-light`}>
