@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 
-import { Calendar, Heart, Globe, Sparkles, Leaf, Sun, Moon, MessageSquare, Send, Settings, Bot, X } from 'lucide-react';
+import { Calendar, Heart, Globe, Sparkles, Leaf, Sun, Moon, MessageSquare, Send, Settings, Bot, X, Clock } from 'lucide-react';
 
 const MODEL_NAME = "models/gemini-2.5-flash";
 
@@ -35,6 +35,8 @@ export default function App() {
   const [chatMessages, setChatMessages] = useState([]);
   const [userQuestion, setUserQuestion] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [majorEvents, setMajorEvents] = useState([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
 
   const lifeChapters = [
     { label: 'Childhood', start: 0, end: 12 },
@@ -62,6 +64,14 @@ export default function App() {
       if (savedApiKey) setGeminiApiKey(savedApiKey);
     }
   }, []);
+
+  // Fetch major events when lifeData is available
+  useEffect(() => {
+    if (lifeData && getApiKey()) {
+      fetchMajorEvents();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lifeData]);
 
   // Helper function to get current time in IST (UTC+5:30)
   const getISTTime = () => {
@@ -283,6 +293,68 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
     e.preventDefault();
     if (userQuestion.trim() && !isLoading) {
       askGemini(userQuestion);
+    }
+  };
+
+  const fetchMajorEvents = async () => {
+    const apiKey = getApiKey();
+    if (!apiKey || !lifeData) return;
+
+    setIsLoadingEvents(true);
+    try {
+      const birthYear = lifeData.birthDate.getFullYear();
+      const currentYear = new Date().getFullYear();
+      
+      const prompt = `List exactly 5 major historical events that happened between ${birthYear} and ${currentYear}. 
+      These should be globally significant events like major political changes, technological breakthroughs, 
+      significant cultural moments, or major world events. 
+      
+      Format your response as a JSON array with exactly 5 objects, each with:
+      - "year": the year the event occurred (number)
+      - "title": a brief title (string, max 60 characters)
+      - "description": a concise description (string, max 150 characters)
+      
+      Return ONLY valid JSON, no additional text. Example format:
+      [{"year": 2001, "title": "9/11 Attacks", "description": "Terrorist attacks on the World Trade Center and Pentagon"}, ...]`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${MODEL_NAME}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch major events');
+      }
+
+      const data = await response.json();
+      const responseText = data.candidates[0].content.parts[0].text;
+      
+      // Extract JSON from response (handle markdown code blocks if present)
+      let jsonText = responseText.trim();
+      if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      }
+      
+      const events = JSON.parse(jsonText);
+      
+      // Ensure we have exactly 5 events, sorted by year
+      const sortedEvents = events.slice(0, 5).sort((a, b) => a.year - b.year);
+      setMajorEvents(sortedEvents);
+    } catch (error) {
+      console.error('Error fetching major events:', error);
+      // Set empty array on error to avoid showing error state
+      setMajorEvents([]);
+    } finally {
+      setIsLoadingEvents(false);
     }
   };
 
@@ -595,6 +667,61 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
             </div>
           ))}
         </div>
+
+        {/* Major Events Section */}
+        {getApiKey() && (
+          <div className={`${cardBgClass} p-8 sm:p-10 mb-8 transition-colors duration-300 animate-fadeIn rounded-2xl`}>
+            <div className="flex items-center gap-3 mb-6">
+              <Clock className={`w-5 h-5 ${textPrimaryClass}`} strokeWidth={2} />
+              <h3 className={`text-xl sm:text-2xl font-semibold ${textPrimaryClass} tracking-tight`}>
+                Major Events in Your Lifetime
+              </h3>
+            </div>
+            
+            {isLoadingEvents ? (
+              <div className={`flex items-center justify-center py-8 ${textSecondaryClass}`}>
+                <div className="flex gap-2">
+                  <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                  <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                  <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                </div>
+                <span className="ml-3 text-sm">Loading major events...</span>
+              </div>
+            ) : majorEvents.length > 0 ? (
+              <div className="space-y-4">
+                {majorEvents.map((event, idx) => (
+                  <div key={idx} className={`border-l-2 ${darkMode ? 'border-zinc-700' : 'border-zinc-300'} pl-4 py-2`}>
+                    <div className="flex items-start gap-3">
+                      <div className={`text-lg sm:text-xl font-semibold ${textPrimaryClass} min-w-[60px]`}>
+                        {event.year}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className={`text-base sm:text-lg font-semibold ${textPrimaryClass} mb-1`}>
+                          {event.title}
+                        </h4>
+                        <p className={`text-sm sm:text-base ${textSecondaryClass} leading-relaxed`}>
+                          {event.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`text-center py-8 ${textSecondaryClass}`}>
+                <p className="text-sm">
+                  Unable to load major events. Please check your API key.
+                </p>
+                <button
+                  onClick={fetchMajorEvents}
+                  className={`mt-4 px-4 py-2 text-sm border ${borderClass} rounded-xl hover:${textPrimaryClass} transition-colors`}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         <p className={`text-xs ${textSecondaryClass} font-light text-center`}>
           Based on your planning number of {lifeData.lifeExpectancy} years ({lifeData.totalWeeks.toLocaleString()} weeks)
