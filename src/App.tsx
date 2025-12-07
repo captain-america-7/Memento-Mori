@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 
-import { Calendar, Heart, Globe, Sparkles, Leaf, Sun, Moon } from 'lucide-react';
+import { Calendar, Heart, Globe, Sparkles, Leaf, Sun, Moon, MessageSquare, Send, Settings, Bot, X } from 'lucide-react';
 
 export default function App() {
   const reflectionPrompts = [
@@ -27,6 +27,12 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentPrompt] = useState(() => reflectionPrompts[Math.floor(Math.random() * reflectionPrompts.length)]);
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [showChat, setShowChat] = useState(false);
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [userQuestion, setUserQuestion] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const lifeChapters = [
     { label: 'Childhood', start: 0, end: 12 },
@@ -42,6 +48,9 @@ export default function App() {
     
     const darkPreference = localStorage.getItem('darkMode');
     if (darkPreference) setDarkMode(darkPreference === 'true');
+    
+    const savedApiKey = localStorage.getItem('geminiApiKey');
+    if (savedApiKey) setGeminiApiKey(savedApiKey);
   }, []);
 
   // Helper function to get current time in IST (UTC+5:30)
@@ -186,6 +195,84 @@ export default function App() {
     const newMode = !darkMode;
     setDarkMode(newMode);
     localStorage.setItem('darkMode', newMode.toString());
+  };
+
+  const saveApiKey = () => {
+    localStorage.setItem('geminiApiKey', geminiApiKey);
+    setShowApiKeyInput(false);
+  };
+
+  const askGemini = async (question) => {
+    if (!geminiApiKey) {
+      setShowApiKeyInput(true);
+      return;
+    }
+
+    setIsLoading(true);
+    const userMessage = { role: 'user', content: question };
+    setChatMessages(prev => [...prev, userMessage]);
+    setUserQuestion('');
+
+    try {
+      // Create context with life data
+      const contextPrompt = lifeData ? `
+You are a helpful assistant providing insights about life, time, and mortality based on the user's life data.
+
+User's Life Data:
+- Age: ${lifeData.yearsLived} years, ${lifeData.monthsLived} months, ${lifeData.daysLived} days
+- Weeks lived: ${lifeData.weeksLived.toLocaleString()} of ${lifeData.totalWeeks.toLocaleString()} (${lifeData.percentageLived}% lived)
+- Weeks remaining: ${lifeData.weeksRemaining.toLocaleString()}
+- Heartbeats: ${lifeData.heartBeats.toLocaleString()}
+- Breaths: ${lifeData.breaths.toLocaleString()}
+- Birth date: ${lifeData.birthDate.toLocaleDateString()}
+- Life expectancy: ${lifeData.lifeExpectancy} years
+
+Provide thoughtful, empathetic, and meaningful insights. Be concise but profound.
+` : 'You are a helpful assistant providing insights about life, time, and mortality.';
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `${contextPrompt}\n\nUser question: ${question}`
+            }]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `API Error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+        throw new Error('Invalid response format from Gemini API');
+      }
+      
+      const aiResponse = data.candidates[0].content.parts[0].text;
+      
+      setChatMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+    } catch (error) {
+      setChatMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: `Error: ${error.message}. Please check your API key and try again.` 
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChatSubmit = (e) => {
+    e.preventDefault();
+    if (userQuestion.trim() && !isLoading) {
+      askGemini(userQuestion);
+    }
   };
 
   const getWeekDate = (weekNum) => {
@@ -379,12 +466,31 @@ export default function App() {
           >
             ← Change birth date
           </button>
-          <button
-            onClick={toggleDarkMode}
-            className={`p-2 rounded-full ${darkMode ? 'text-neutral-400 hover:text-neutral-200' : 'text-neutral-600 hover:text-neutral-900'} transition-colors`}
-          >
-            {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowChat(!showChat)}
+              className={`p-2 rounded-full ${darkMode ? 'text-neutral-400 hover:text-neutral-200' : 'text-neutral-600 hover:text-neutral-900'} transition-colors relative`}
+              title="Ask AI insights"
+            >
+              <MessageSquare className="w-4 h-4" />
+              {chatMessages.length > 0 && (
+                <span className="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full"></span>
+              )}
+            </button>
+            <button
+              onClick={() => setShowApiKeyInput(true)}
+              className={`p-2 rounded-full ${darkMode ? 'text-neutral-400 hover:text-neutral-200' : 'text-neutral-600 hover:text-neutral-900'} transition-colors`}
+              title="API Settings"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+            <button
+              onClick={toggleDarkMode}
+              className={`p-2 rounded-full ${darkMode ? 'text-neutral-400 hover:text-neutral-200' : 'text-neutral-600 hover:text-neutral-900'} transition-colors`}
+            >
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         <div className={`${cardBgClass} p-8 sm:p-12 mb-8 transition-colors duration-300 rounded-2xl`}>
@@ -515,6 +621,174 @@ export default function App() {
                 className={`flex-1 px-4 py-3 border ${borderClass} ${textSecondaryClass} hover:${textPrimaryClass} text-sm font-medium transition-all rounded-xl`}
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat Panel */}
+      {showChat && (
+        <div className={`fixed bottom-4 right-4 w-[calc(100%-2rem)] sm:w-full max-w-md h-[500px] sm:h-[600px] ${cardBgClass} rounded-2xl shadow-2xl flex flex-col z-50 border ${borderClass} transition-all duration-300`}>
+          <div className={`flex items-center justify-between p-4 border-b ${borderClass}`}>
+            <div className="flex items-center gap-3">
+              <Bot className={`w-5 h-5 ${textPrimaryClass}`} />
+              <h3 className={`text-lg font-semibold ${textPrimaryClass}`}>
+                AI Insights
+              </h3>
+            </div>
+            <button
+              onClick={() => setShowChat(false)}
+              className={`p-1 rounded-full ${textSecondaryClass} hover:${textPrimaryClass} transition-colors`}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {chatMessages.length === 0 ? (
+              <div className={`text-center py-4 ${textSecondaryClass}`}>
+                <Bot className={`w-12 h-12 mx-auto mb-4 ${textSecondaryClass} opacity-50`} />
+                <p className="text-sm font-light mb-4">
+                  Ask me anything about your life, time, or mortality.
+                </p>
+                <p className="text-xs mb-4 opacity-75">
+                  I'll provide insights based on your life data.
+                </p>
+                <div className="space-y-2 mt-6">
+                  <p className={`text-xs ${textSecondaryClass} font-medium mb-2`}>Try asking:</p>
+                  {[
+                    "What should I focus on with my remaining time?",
+                    "How can I make the most of my weeks?",
+                    "What patterns do you notice in my life?",
+                    "How should I think about my mortality?"
+                  ].map((suggestion, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setUserQuestion(suggestion);
+                        setTimeout(() => askGemini(suggestion), 100);
+                      }}
+                      className={`block w-full text-left px-3 py-2 text-xs rounded-lg border ${borderClass} ${darkMode ? 'hover:bg-zinc-800' : 'hover:bg-zinc-100'} transition-colors ${textSecondaryClass}`}
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              chatMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-xl px-4 py-3 ${
+                      msg.role === 'user'
+                        ? darkMode
+                          ? 'bg-white text-black'
+                          : 'bg-black text-white'
+                        : `${cardBgClass} border ${borderClass} ${textPrimaryClass}`
+                    }`}
+                  >
+                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  </div>
+                </div>
+              ))
+            )}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className={`${cardBgClass} border ${borderClass} rounded-xl px-4 py-3 ${textSecondaryClass}`}>
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={handleChatSubmit} className={`p-4 border-t ${borderClass}`}>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={userQuestion}
+                onChange={(e) => setUserQuestion(e.target.value)}
+                placeholder="Ask a question..."
+                disabled={isLoading}
+                className={`flex-1 px-4 py-2 border ${borderClass} ${textPrimaryClass} ${cardBgClass} text-sm rounded-xl focus:outline-none focus:ring-2 ${darkMode ? 'focus:ring-white' : 'focus:ring-black'} transition-all disabled:opacity-50`}
+              />
+              <button
+                type="submit"
+                disabled={!userQuestion.trim() || isLoading}
+                className={`p-2 ${darkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-black text-white hover:bg-zinc-800'} rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* API Key Input Modal */}
+      {showApiKeyInput && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className={`${cardBgClass} p-6 rounded-2xl max-w-md w-full`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-xl font-semibold ${textPrimaryClass} tracking-tight`}>
+                Gemini API Key
+              </h3>
+              <button
+                onClick={() => setShowApiKeyInput(false)}
+                className={`p-1 rounded-full ${textSecondaryClass} hover:${textPrimaryClass} transition-colors`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className={`mb-4 p-4 rounded-xl ${darkMode ? 'bg-zinc-800' : 'bg-zinc-100'} border ${borderClass}`}>
+              <p className={`text-xs ${textSecondaryClass} mb-2 font-medium`}>
+                How to get your API key:
+              </p>
+              <ol className={`text-xs ${textSecondaryClass} space-y-1 list-decimal list-inside`}>
+                <li>Visit <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a></li>
+                <li>Sign in with your Google account</li>
+                <li>Click "Create API Key"</li>
+                <li>Copy and paste it here</li>
+              </ol>
+            </div>
+
+            <label className={`block text-sm font-medium ${textPrimaryClass} mb-2`}>
+              API Key
+            </label>
+            <input
+              type="password"
+              value={geminiApiKey}
+              onChange={(e) => setGeminiApiKey(e.target.value)}
+              placeholder="Enter your Gemini API key"
+              className={`w-full px-4 py-3 border ${borderClass} ${textPrimaryClass} ${cardBgClass} text-sm font-normal rounded-xl focus:outline-none focus:ring-2 ${darkMode ? 'focus:ring-white' : 'focus:ring-black'} transition-all mb-4`}
+            />
+            <p className={`text-xs ${textSecondaryClass} mb-4 font-light`}>
+              Your API key is stored locally and never shared.
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={saveApiKey}
+                className={`flex-1 px-4 py-3 ${darkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-black text-white hover:bg-zinc-800'} text-sm font-medium transition-all rounded-xl`}
+              >
+                Save
+              </button>
+              <button
+                onClick={() => {
+                  setGeminiApiKey('');
+                  localStorage.removeItem('geminiApiKey');
+                  setShowApiKeyInput(false);
+                }}
+                className={`flex-1 px-4 py-3 border ${borderClass} ${textSecondaryClass} hover:${textPrimaryClass} text-sm font-medium transition-all rounded-xl`}
+              >
+                Clear
               </button>
             </div>
           </div>
