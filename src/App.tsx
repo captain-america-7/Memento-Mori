@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react';
 
 import { Calendar, Heart, Globe, Sparkles, Leaf, Sun, Moon, MessageSquare, Send, Settings, Bot, X } from 'lucide-react';
 
+const MODEL_NAME = "models/gemini-2.5-flash";
+
 export default function App() {
   const reflectionPrompts = [
     "This week: what is one thing you want to remember?",
@@ -42,6 +44,11 @@ export default function App() {
     { label: 'Later life', start: 60, end: 150 }
   ];
 
+  // Helper function to get API key (env var takes precedence)
+  const getApiKey = () => {
+    return import.meta.env.VITE_GEMINI_API_KEY || geminiApiKey || '';
+  };
+
   useEffect(() => {
     const saved = localStorage.getItem('markedWeeks');
     if (saved) setMarkedWeeks(JSON.parse(saved));
@@ -49,8 +56,11 @@ export default function App() {
     const darkPreference = localStorage.getItem('darkMode');
     if (darkPreference) setDarkMode(darkPreference === 'true');
     
-    const savedApiKey = localStorage.getItem('geminiApiKey');
-    if (savedApiKey) setGeminiApiKey(savedApiKey);
+    // Only load from localStorage if no env var is set
+    if (!import.meta.env.VITE_GEMINI_API_KEY) {
+      const savedApiKey = localStorage.getItem('geminiApiKey');
+      if (savedApiKey) setGeminiApiKey(savedApiKey);
+    }
   }, []);
 
   // Helper function to get current time in IST (UTC+5:30)
@@ -203,7 +213,8 @@ export default function App() {
   };
 
   const askGemini = async (question) => {
-    if (!geminiApiKey) {
+    const apiKey = getApiKey();
+    if (!apiKey) {
       setShowApiKeyInput(true);
       return;
     }
@@ -230,7 +241,7 @@ User's Life Data:
 Provide thoughtful, empathetic, and meaningful insights. Be concise but profound.
 ` : 'You are a helpful assistant providing insights about life, time, and mortality.';
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${MODEL_NAME}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -747,50 +758,76 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
               </button>
             </div>
             
-            <div className={`mb-4 p-4 rounded-xl ${darkMode ? 'bg-zinc-800' : 'bg-zinc-100'} border ${borderClass}`}>
-              <p className={`text-xs ${textSecondaryClass} mb-2 font-medium`}>
-                How to get your API key:
-              </p>
-              <ol className={`text-xs ${textSecondaryClass} space-y-1 list-decimal list-inside`}>
-                <li>Visit <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a></li>
-                <li>Sign in with your Google account</li>
-                <li>Click "Create API Key"</li>
-                <li>Copy and paste it here</li>
-              </ol>
-            </div>
+            {import.meta.env.VITE_GEMINI_API_KEY ? (
+              <div className={`mb-4 p-4 rounded-xl ${darkMode ? 'bg-green-900/20 border-green-500/30' : 'bg-green-50 border-green-200'} border ${borderClass}`}>
+                <p className={`text-xs ${darkMode ? 'text-green-400' : 'text-green-700'} mb-1 font-medium flex items-center gap-2`}>
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  API key loaded from environment variable
+                </p>
+                <p className={`text-xs ${textSecondaryClass} mt-2`}>
+                  Your API key is set via <code className="px-1 py-0.5 rounded bg-black/10 dark:bg-white/10">VITE_GEMINI_API_KEY</code> in your <code className="px-1 py-0.5 rounded bg-black/10 dark:bg-white/10">.env</code> file.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className={`mb-4 p-4 rounded-xl ${darkMode ? 'bg-zinc-800' : 'bg-zinc-100'} border ${borderClass}`}>
+                  <p className={`text-xs ${textSecondaryClass} mb-2 font-medium`}>
+                    Option 1: Environment Variable (Recommended for development)
+                  </p>
+                  <p className={`text-xs ${textSecondaryClass} mb-3`}>
+                    Create a <code className="px-1 py-0.5 rounded bg-black/10 dark:bg-white/10">.env</code> file in the project root with:
+                  </p>
+                  <code className={`block text-xs p-2 rounded ${darkMode ? 'bg-zinc-900' : 'bg-white'} ${textPrimaryClass} mb-3`}>
+                    VITE_GEMINI_API_KEY=your_api_key_here
+                  </code>
+                  <p className={`text-xs ${textSecondaryClass} mb-3 font-medium`}>
+                    Option 2: Manual Entry
+                  </p>
+                  <ol className={`text-xs ${textSecondaryClass} space-y-1 list-decimal list-inside`}>
+                    <li>Visit <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a></li>
+                    <li>Sign in with your Google account</li>
+                    <li>Click "Create API Key"</li>
+                    <li>Copy and paste it below</li>
+                  </ol>
+                </div>
 
-            <label className={`block text-sm font-medium ${textPrimaryClass} mb-2`}>
-              API Key
-            </label>
-            <input
-              type="password"
-              value={geminiApiKey}
-              onChange={(e) => setGeminiApiKey(e.target.value)}
-              placeholder="Enter your Gemini API key"
-              className={`w-full px-4 py-3 border ${borderClass} ${textPrimaryClass} ${cardBgClass} text-sm font-normal rounded-xl focus:outline-none focus:ring-2 ${darkMode ? 'focus:ring-white' : 'focus:ring-black'} transition-all mb-4`}
-            />
-            <p className={`text-xs ${textSecondaryClass} mb-4 font-light`}>
-              Your API key is stored locally and never shared.
-            </p>
+                <label className={`block text-sm font-medium ${textPrimaryClass} mb-2`}>
+                  API Key
+                </label>
+                <input
+                  type="password"
+                  value={geminiApiKey}
+                  onChange={(e) => setGeminiApiKey(e.target.value)}
+                  placeholder="Enter your Gemini API key"
+                  className={`w-full px-4 py-3 border ${borderClass} ${textPrimaryClass} ${cardBgClass} text-sm font-normal rounded-xl focus:outline-none focus:ring-2 ${darkMode ? 'focus:ring-white' : 'focus:ring-black'} transition-all mb-4`}
+                />
+                <p className={`text-xs ${textSecondaryClass} mb-4 font-light`}>
+                  Your API key is stored locally and never shared.
+                </p>
+              </>
+            )}
             
-            <div className="flex gap-3">
-              <button
-                onClick={saveApiKey}
-                className={`flex-1 px-4 py-3 ${darkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-black text-white hover:bg-zinc-800'} text-sm font-medium transition-all rounded-xl`}
-              >
-                Save
-              </button>
-              <button
-                onClick={() => {
-                  setGeminiApiKey('');
-                  localStorage.removeItem('geminiApiKey');
-                  setShowApiKeyInput(false);
-                }}
-                className={`flex-1 px-4 py-3 border ${borderClass} ${textSecondaryClass} hover:${textPrimaryClass} text-sm font-medium transition-all rounded-xl`}
-              >
-                Clear
-              </button>
-            </div>
+            {!import.meta.env.VITE_GEMINI_API_KEY && (
+              <div className="flex gap-3">
+                <button
+                  onClick={saveApiKey}
+                  disabled={!geminiApiKey.trim()}
+                  className={`flex-1 px-4 py-3 ${darkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-black text-white hover:bg-zinc-800'} text-sm font-medium transition-all rounded-xl disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setGeminiApiKey('');
+                    localStorage.removeItem('geminiApiKey');
+                    setShowApiKeyInput(false);
+                  }}
+                  className={`flex-1 px-4 py-3 border ${borderClass} ${textSecondaryClass} hover:${textPrimaryClass} text-sm font-medium transition-all rounded-xl`}
+                >
+                  Clear
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
