@@ -139,8 +139,43 @@ cd memento-mori
 npm install
 
 # Start development server
-npm start
+npm run dev
 ```
+
+## 🌐 Deployment
+
+### Deploy to Vercel
+
+This project is configured for easy deployment on Vercel:
+
+#### Option 1: Deploy via Vercel CLI
+
+```bash
+# Install Vercel CLI globally (if not already installed)
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+#### Option 2: Deploy via Vercel Dashboard
+
+1. **Push your code to GitHub** (if not already done)
+2. **Go to [vercel.com](https://vercel.com)** and sign in
+3. **Click "Add New Project"**
+4. **Import your GitHub repository**
+5. **Vercel will auto-detect Vite settings:**
+   - Framework Preset: Vite
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+   - Install Command: `npm install`
+6. **Click "Deploy"**
+
+The project includes a `vercel.json` configuration file that handles:
+- Build settings
+- SPA routing (all routes redirect to `index.html` for client-side routing)
+
+Your app will be live at `https://your-project-name.vercel.app` 🚀
 
 ### Usage
 
