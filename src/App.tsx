@@ -10,7 +10,7 @@ import StatsSection from "./components/StatsSection";
 import WeekNoteModal from "./components/WeekNoteModal";
 import AiChatPanel from "./components/AiChatPanel";
 import ApiKeyModal from "./components/ApiKeyModal";
-import { calculateLifeData, LifeData } from "./utils/lifeCalculations";
+import { calculateLifeData, LifeData, getISTTime } from "./utils/lifeCalculations";
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -84,13 +84,7 @@ export default function App() {
     }
   }, [lifeData, geminiApiKey, import.meta.env.VITE_GEMINI_API_KEY]);
 
-  // Helper function to get current time in IST (UTC+5:30)
-  const getISTTime = () => {
-    const now = new Date();
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const ist = new Date(utc + (5.5 * 3600000)); // IST is UTC+5:30
-    return ist;
-  };
+
 
 
 
