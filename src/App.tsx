@@ -77,8 +77,7 @@ export default function App() {
     if (lifeData && getApiKey()) {
       fetchMajorEvents();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lifeData]);
+  }, [lifeData, geminiApiKey, import.meta.env.VITE_GEMINI_API_KEY]);
 
   // Helper function to get current time in IST (UTC+5:30)
   const getISTTime = () => {
@@ -89,7 +88,10 @@ export default function App() {
   };
 
   const calculateLifeData = (birth, expectancy) => {
-    const birthDateTime = new Date(birth);
+    // Fix Bug 7: always treat input as IST midnight
+    const [y, m, d] = birth.split('-').map(Number);
+    const dateUTC = new Date(Date.UTC(y, m-1, d, 0, 0, 0));
+    const birthDateTime = new Date(dateUTC.getTime() + (5.5 * 3600000));
     const now = getISTTime();
     const msPerWeek = 7 * 24 * 60 * 60 * 1000;
     const msPerDay = 24 * 60 * 60 * 1000;
