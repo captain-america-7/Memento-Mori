@@ -11,7 +11,6 @@ const WeeksGrid: React.FC<WeeksGridProps> = (props) => {
   if (!props.lifeData) return null;
   const totalWeeks = props.lifeData.totalWeeks;
   const weeksPerRow = 52;
-  const numRows = Math.ceil(totalWeeks / weeksPerRow);
   
   return (
     <div>
