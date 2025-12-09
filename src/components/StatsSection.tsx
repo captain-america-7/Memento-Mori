@@ -29,38 +29,38 @@ const StatsSection: React.FC<StatsSectionProps> = (props) => {
   const statSections = [
     {
       icon: Heart,
-      title: 'Life highlights',
+      title: 'The Weight of Time',
       content: [
-        `That's ${lifeData.daysLived.toLocaleString()} days of experience and approximately ${lifeData.seasons} seasons observed.`,
-        `Your heart has beaten approximately ${lifeData.heartBeats.toLocaleString()} times.`,
-        `You've taken around ${lifeData.breaths.toLocaleString()} breaths and slept about ${lifeData.sleepHours.toLocaleString()} hours.`
+        `You have lived through ${lifeData.daysLived.toLocaleString()} distinct days, each a collection of moments that will never happen again. You have witnessed the changing of ${lifeData.seasons} seasons, from the first bloom of spring to the quiet of winter.`,
+        `Your heart, a tireless engine of life, has beaten approximately ${lifeData.heartBeats.toLocaleString()} times, keeping rhythm with every joy, sorrow, and quiet moment you've ever experienced.`,
+        `You have drawn around ${lifeData.breaths.toLocaleString()} breaths, an invisible exchange with the world that has sustained you through ${lifeData.sleepHours.toLocaleString()} hours of dreams and rest.`
       ]
     },
     {
       icon: Globe,
-      title: 'Societal context',
+      title: 'The Human Tapestry',
       content: [
-        `During your lifetime, humanity's population has grown from approximately ${(lifeData.worldPopAtBirth / 1000000000).toFixed(1)} billion to over ${(lifeData.currentWorldPop / 1000000000).toFixed(1)} billion people.`,
-        `The average person will meet around 80,000 people in their lifetime. You've likely already met approximately ${lifeData.peopleMet.toLocaleString()} individuals.`,
-        `Since your birth, humanity has collectively experienced approximately ${lifeData.totalBirths.toLocaleString()} births and ${lifeData.totalDeaths.toLocaleString()} deaths.`
+        `Since you took your first breath, the human story has expanded from ${(lifeData.worldPopAtBirth / 1000000000).toFixed(1)} billion to over ${(lifeData.currentWorldPop / 1000000000).toFixed(1)} billion souls. You are part of this unprecedented growth of consciousness.`,
+        `In a world of billions, you have crossed paths with approximately ${lifeData.peopleMet.toLocaleString()} individuals. Some became friends, some remained strangers, but each interaction wove a thread into your life's unique pattern.`,
+        `While you were growing, learning, and living, humanity collectively welcomed ${lifeData.totalBirths.toLocaleString()} new lives and said goodbye to ${lifeData.totalDeaths.toLocaleString()} others. Your life is a bridge between these generations.`
       ]
     },
     {
       icon: Sparkles,
-      title: 'Cosmic perspective',
+      title: 'Stardust in Motion',
       content: [
-        `Since your birth, Earth has traveled approximately ${lifeData.distanceTraveledAroundSun.toLocaleString()} kilometers through space around the Sun.`,
-        `The observable universe is about 93 billion light-years across. Your entire lifespan is just ${lifeData.lifespanPercent}% of the universe's age.`,
-        `During your lifetime, our solar system has moved about ${lifeData.distanceThroughGalaxy.toLocaleString()} kilometers through the Milky Way galaxy.`
+        `You are a traveler on a cosmic scale. Since your birth, Earth has carried you ${lifeData.distanceTraveledAroundSun.toLocaleString()} kilometers around the Sun—a journey through space that you make simply by standing still.`,
+        `The universe is vast and ancient, yet you are here now. Your lifespan represents a fleeting but precious 0.0000001595% of cosmic history. You are the universe experiencing itself for a brief, shining moment.`,
+        `As you read this, our entire solar system is rushing through the Milky Way. You have traveled ${lifeData.distanceThroughGalaxy.toLocaleString()} kilometers through the galaxy, never returning to the same point in space-time twice.`
       ]
     },
     {
       icon: Leaf,
-      title: 'Natural world',
+      title: 'Nature\'s Rhythm',
       content: [
-        `You've experienced approximately ${lifeData.lunarCycles} lunar cycles and ${lifeData.tripsAroundSun} trips around the Sun.`,
-        `A giant sequoia tree can live over 3,000 years. Your current age is ${lifeData.sequoiaPercent}% of its potential lifespan.`,
-        `During your lifetime, your body has replaced most of its cells several times. You are not made of the same atoms you were born with.`
+        `You have lived under the light of ${lifeData.lunarCycles} full moons and completed ${lifeData.tripsAroundSun} journeys around our star. Your life is measured not just in years, but in celestial cycles.`,
+        `Consider the ancient Sequoia, standing for millennia. Your life is a spark compared to its slow-burning flame, yet you burn with a different intensity. You have lived ${lifeData.sequoiaPercent}% of a Sequoia's potential age.`,
+        `You are a river, not a rock. Most of the atoms that formed you at birth have long since returned to the world, replaced by new ones. You are a constantly renewing pattern of energy and matter, persisting through change.`
       ]
     },
   ];
