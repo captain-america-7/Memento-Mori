@@ -445,21 +445,20 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
   if (step === 1) {
     return (
       <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md mx-auto">
           <div className="text-center mb-12 sm:mb-16">
             <Calendar className={`w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-4 sm:mb-6 ${darkMode ? 'text-neutral-300' : 'text-neutral-800'}`} strokeWidth={1.5} />
-            <h1 className={`text-2xl sm:text-3xl font-light ${textPrimaryClass} mb-3 sm:mb-4`}>
+            <h1 className={`text-2xl sm:text-3xl font-light ${darkMode ? 'text-white' : 'text-black'} mb-3 sm:mb-4`}>
               Life in weeks
             </h1>
-            <p className={`text-sm sm:text-base ${textSecondaryClass} font-light leading-relaxed`}>
+            <p className={`text-sm sm:text-base ${darkMode ? 'text-zinc-400' : 'text-zinc-600'} font-light leading-relaxed`}>
               Each life contains thousands of weeks.<br />
               Let's visualize yours.
             </p>
           </div>
-
           <div className="space-y-6 sm:space-y-8">
             <div>
-              <label htmlFor="birthdate" className={`block text-xs sm:text-sm font-light ${textSecondaryClass} mb-3`}>
+              <label htmlFor="birthdate" className={`block text-xs sm:text-sm font-light ${darkMode ? 'text-zinc-400' : 'text-zinc-600'} mb-3`}>
                 When were you born?
               </label>
               <input
@@ -468,15 +467,14 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
                 value={birthDate}
                 onChange={(e) => setBirthDate(e.target.value)}
                 max={getISTTime().toISOString().split('T')[0]}
-                className={`w-full px-4 py-3 sm:py-4 border ${borderClass} ${textPrimaryClass} ${cardBgClass} text-sm sm:text-base font-normal rounded-xl focus:outline-none focus:ring-2 ${darkMode ? 'focus:ring-white' : 'focus:ring-black'} transition-all`}
+                className={`w-full px-4 py-3 sm:py-4 border ${darkMode ? 'border-zinc-800' : 'border-zinc-200'} ${darkMode ? 'text-white' : 'text-black'} ${darkMode ? 'bg-zinc-900' : 'bg-zinc-50'} text-sm sm:text-base font-normal rounded-xl focus:outline-none focus:ring-2 ${darkMode ? 'focus:ring-white' : 'focus:ring-black'} transition-all`}
               />
-              <p className={`mt-2 text-xs ${textSecondaryClass} font-light`}>
+              <p className={`mt-2 text-xs ${darkMode ? 'text-zinc-400' : 'text-zinc-600'} font-light`}>
                 Your data is stored only on this device
               </p>
             </div>
-
             <div>
-              <label className={`block text-xs sm:text-sm font-light ${textSecondaryClass} mb-3`}>
+              <label className={`block text-xs sm:text-sm font-light ${darkMode ? 'text-zinc-400' : 'text-zinc-600'} mb-3`}>
                 Plan for
               </label>
               <div className="flex gap-2 mb-3">
@@ -484,11 +482,14 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
                   <button
                     key={val}
                     onClick={() => setLifeExpectancy(val)}
-                    className={`flex-1 px-4 py-3 text-sm font-medium border ${borderClass} transition-all rounded-lg ${
-                      lifeExpectancy === val
-                        ? darkMode ? 'bg-white text-black border-white' : 'bg-black text-white border-black'
-                        : darkMode ? 'bg-zinc-900 text-zinc-400 hover:text-white' : 'bg-white text-zinc-600 hover:text-black'
-                    }`}
+                    className={`flex-1 px-4 py-3 text-sm font-medium border ${darkMode ? 'border-zinc-800' : 'border-zinc-200'} transition-all rounded-lg ${lifeExpectancy === val
+                      ? darkMode
+                        ? 'bg-white text-black border-white'
+                        : 'bg-black text-white border-black'
+                      : darkMode
+                        ? 'bg-zinc-900 text-zinc-400 hover:text-white'
+                        : 'bg-white text-zinc-600 hover:text-black'}
+                    `}
                   >
                     {val === 'custom' ? 'Custom' : `${val} years`}
                   </button>
@@ -502,14 +503,13 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
                   min="1"
                   max="150"
                   placeholder="Enter years"
-                  className={`w-full px-4 py-3 border ${borderClass} ${textPrimaryClass} ${cardBgClass} text-sm font-normal rounded-xl focus:outline-none focus:ring-2 ${darkMode ? 'focus:ring-white' : 'focus:ring-black'} transition-all`}
+                  className={`w-full px-4 py-3 border ${darkMode ? 'border-zinc-800' : 'border-zinc-200'} ${darkMode ? 'text-white' : 'text-black'} ${darkMode ? 'bg-zinc-900' : 'bg-zinc-50'} text-sm font-normal rounded-xl focus:outline-none focus:ring-2 ${darkMode ? 'focus:ring-white' : 'focus:ring-black'} transition-all`}
                 />
               )}
-              <p className={`mt-2 text-xs ${textSecondaryClass} font-light`}>
+              <p className={`mt-2 text-xs ${darkMode ? 'text-zinc-400' : 'text-zinc-600'} font-light`}>
                 This is just a planning number, not a prediction
               </p>
             </div>
-
             <button
               onClick={handleSubmit}
               disabled={!birthDate || (lifeExpectancy === 'custom' && !customExpectancy)}
