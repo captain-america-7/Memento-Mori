@@ -1,11 +1,19 @@
 import React from "react";
+import { LifeData } from "../utils/lifeCalculations";
+
+interface Chapter {
+  label: string;
+  start: number;
+  end: number;
+}
+
 interface WeeksGridProps {
-  lifeData: any;
+  lifeData: LifeData;
   markedWeeks: { [key: number]: string };
   handleWeekClick: (weekNum: number) => void;
   darkMode: boolean;
   isAnimating: boolean;
-  lifeChapters: any[];
+  lifeChapters: Chapter[];
 }
 const WeeksGrid: React.FC<WeeksGridProps> = (props) => {
   if (!props.lifeData) return null;
@@ -15,7 +23,7 @@ const WeeksGrid: React.FC<WeeksGridProps> = (props) => {
   const weeksPerRow = isMobile ? 26 : 52;
   const { totalWeeks } = props.lifeData;
   const rows = Math.ceil(totalWeeks / weeksPerRow);
-  
+
   // Chapter logic per row
   function getYearAtRow(rowIdx: number) {
     return Math.floor((rowIdx * weeksPerRow) / 52);
@@ -33,19 +41,19 @@ const WeeksGrid: React.FC<WeeksGridProps> = (props) => {
 
   // Actual rendering
   return (
-    <div className="overflow-x-auto">
-      <div style={{ minWidth: isMobile ? 720 : 1200 }}>
+    <div className="overflow-hidden w-full px-2 sm:px-0">
+      <div className="w-full">
         {/* Header row: empty label cell, then 1...weeksPerRow */}
         <div
-          className="grid" 
+          className="grid gap-0.5 sm:gap-1"
           style={{
-            gridTemplateColumns: `80px repeat(${weeksPerRow}, minmax(0, 1fr))`,
+            gridTemplateColumns: `30px repeat(${weeksPerRow}, minmax(0, 1fr))`,
             marginBottom: 8
           }}
         >
           <div></div>
           {Array.from({ length: weeksPerRow }).map((_, i) => (
-            <div key={i} className="text-[10px] text-center text-zinc-400 dark:text-zinc-500 select-none">
+            <div key={i} className="text-[8px] sm:text-[10px] text-center text-zinc-400 dark:text-zinc-500 select-none">
               {i + 1}
             </div>
           ))}
@@ -59,14 +67,15 @@ const WeeksGrid: React.FC<WeeksGridProps> = (props) => {
           return (
             <div
               key={rowIdx}
-              className="grid items-center"
+              className="grid items-center gap-0.5 sm:gap-1"
               style={{
-                gridTemplateColumns: `80px repeat(${weeksPerRow}, minmax(0, 1fr))`,
+                gridTemplateColumns: `30px repeat(${weeksPerRow}, minmax(0, 1fr))`,
                 marginBottom: 2
               }}
             >
-              <div className={`text-[10px] sm:text-xs font-medium w-20 text-right uppercase tracking-wider ${props.darkMode ? 'text-zinc-500' : 'text-zinc-500'}`.trim()}>
-                {chapterLabel}
+              <div className={`text-[8px] sm:text-[10px] font-medium w-full text-right uppercase tracking-wider pr-2 ${props.darkMode ? 'text-zinc-500' : 'text-zinc-500'}`.trim()}>
+                {chapterLabel && <span className="hidden sm:inline">{chapterLabel}</span>}
+                {chapterLabel && <span className="sm:hidden">{chapterLabel.substring(0, 1)}</span>}
               </div>
               {Array.from({ length: weeksPerRow }).map((_, weekOfRowIdx) => {
                 const weekNum = rowStartWeek + weekOfRowIdx;
@@ -85,7 +94,7 @@ const WeeksGrid: React.FC<WeeksGridProps> = (props) => {
                     key={weekOfRowIdx}
                     onClick={() => props.handleWeekClick(weekNum)}
                     title={`Week ${weekNum + 1}`}
-                    className={`w-3 h-3 sm:w-3 sm:h-3 rounded-[1px] cursor-pointer transition-all duration-200 m-auto ${base} ${markRing} ${anim}`}
+                    className={`w-full aspect-square max-w-[10px] sm:max-w-[12px] rounded-[1px] cursor-pointer transition-all duration-200 m-auto ${base} ${markRing} ${anim}`}
                     style={{ animationDelay: `${(rowIdx * weeksPerRow + weekOfRowIdx) * 0.3}ms` }}
                   />
                 );
