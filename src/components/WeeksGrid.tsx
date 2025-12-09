@@ -65,8 +65,8 @@ const WeeksGrid: React.FC<WeeksGridProps> = (props) => {
 
   // Actual rendering
   return (
-    <div className="overflow-hidden w-full px-2 sm:px-0">
-      <div className="w-full">
+    <div className="overflow-hidden w-full px-2 sm:px-0 mb-12">
+      <div className={`w-full mx-auto ${props.viewMode === 'months' ? 'max-w-3xl' : props.viewMode === 'years' ? 'max-w-2xl' : ''}`}>
         {/* Header row: empty label cell, then 1...weeksPerRow */}
         <div
           className="grid gap-0.5 sm:gap-1"
@@ -146,7 +146,7 @@ const WeeksGrid: React.FC<WeeksGridProps> = (props) => {
                 const sizeClass = props.viewMode === 'years'
                   ? 'w-full aspect-square max-w-[20px] sm:max-w-[24px]'
                   : props.viewMode === 'months'
-                    ? 'w-full aspect-square max-w-[16px] sm:max-w-[20px]'
+                    ? 'w-full aspect-square max-w-[12px] sm:max-w-[14px]'
                     : 'w-full aspect-square max-w-[10px] sm:max-w-[12px]';
 
                 return (
