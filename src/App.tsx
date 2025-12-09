@@ -373,10 +373,25 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
           animation: countUp 0.5s ease-out;
         }
         @media print {
-          @page { margin: 2cm; }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .no-print { display: none !important; }
-          button { display: none !important; }
+          @page { margin: 1cm; size: auto; }
+          body * {
+            visibility: hidden;
+          }
+          #printable-grid, #printable-grid * {
+            visibility: visible;
+          }
+          #printable-grid {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+          }
+          /* Override the margin-bottom on the grid container itself */
+          #printable-grid > div {
+            margin-bottom: 0 !important;
+          }
           /* Force light mode colors for print */
           .bg-zinc-900 { background-color: white !important; color: black !important; }
           .text-white { color: black !important; }
@@ -394,13 +409,7 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
             ← Change birth date
           </button>
           <div className="flex items-center gap-2 no-print">
-            <button
-              onClick={() => window.print()}
-              className={`p-2 rounded-full ${darkMode ? 'text-neutral-400 hover:text-neutral-200' : 'text-neutral-600 hover:text-neutral-900'} transition-colors`}
-              title="Print"
-            >
-              <Printer className="w-4 h-4" />
-            </button>
+
             <button
               onClick={() => setShowChat(!showChat)}
               className={`p-2 rounded-full ${darkMode ? 'text-neutral-400 hover:text-neutral-200' : 'text-neutral-600 hover:text-neutral-900'} transition-colors relative`}
@@ -449,18 +458,35 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
           </div>
         </div>
 
+        {/* Print Button - Prominent */}
+        <div className="flex justify-center mb-8 no-print">
+          <button
+            onClick={() => window.print()}
+            className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all ${
+              darkMode 
+                ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white' 
+                : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 hover:text-black'
+            }`}
+          >
+            <Printer className="w-4 h-4" />
+            Print Grid
+          </button>
+        </div>
+
         {/* Age Summary */}
         <AgeSummaryCard lifeData={lifeData} textPrimaryClass={textPrimaryClass} textSecondaryClass={textSecondaryClass} />
         {/* Weeks Grid */}
-        <WeeksGrid
-          lifeData={lifeData}
-          markedWeeks={markedWeeks}
-          handleWeekClick={handleWeekClick}
-          darkMode={darkMode}
-          isAnimating={isAnimating}
-          lifeChapters={lifeChapters}
-          viewMode={viewMode}
-        />
+        <div id="printable-grid">
+          <WeeksGrid
+            lifeData={lifeData}
+            markedWeeks={markedWeeks}
+            handleWeekClick={handleWeekClick}
+            darkMode={darkMode}
+            isAnimating={isAnimating}
+            lifeChapters={lifeChapters}
+            viewMode={viewMode}
+          />
+        </div>
         {/* Stats Section and Major Events */}
         <StatsSection
           lifeData={lifeData}
