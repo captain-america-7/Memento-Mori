@@ -1,16 +1,23 @@
-// @ts-nocheck
+
 
 import React from "react";
 import { Heart, Globe, Sparkles, Leaf, Clock } from "lucide-react";
+import { LifeData } from "../utils/lifeCalculations";
+
+interface MajorEvent {
+  year: number;
+  title: string;
+  description: string;
+}
 
 interface StatsSectionProps {
-  lifeData: any;
+  lifeData: LifeData;
   darkMode: boolean;
   textPrimaryClass: string;
   textSecondaryClass: string;
   cardBgClass: string;
   borderClass: string;
-  majorEvents: any[];
+  majorEvents: MajorEvent[];
   isLoadingEvents: boolean;
   fetchMajorEvents: () => void;
   getApiKey: () => string;

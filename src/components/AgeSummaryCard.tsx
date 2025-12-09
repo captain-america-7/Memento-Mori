@@ -1,8 +1,10 @@
-// @ts-nocheck
+
 
 import React from "react";
+import { LifeData } from "../utils/lifeCalculations";
+
 interface AgeSummaryCardProps {
-  lifeData: any;
+  lifeData: LifeData;
   textPrimaryClass: string;
   textSecondaryClass: string;
 }

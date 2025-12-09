@@ -1,6 +1,4 @@
-// @ts-nocheck
-
-export const getThemeClasses = (darkMode) => {
+export const getThemeClasses = (darkMode: boolean) => {
   return {
     bgClass: darkMode ? 'bg-black' : 'bg-white',
     cardBgClass: darkMode ? 'bg-zinc-900' : 'bg-zinc-50',

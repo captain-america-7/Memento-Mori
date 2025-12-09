@@ -1,4 +1,4 @@
-// @ts-nocheck
+/// <reference types="vite/client" />
 
 
 
@@ -10,39 +10,44 @@ import StatsSection from "./components/StatsSection";
 import WeekNoteModal from "./components/WeekNoteModal";
 import AiChatPanel from "./components/AiChatPanel";
 import ApiKeyModal from "./components/ApiKeyModal";
+import { calculateLifeData, LifeData } from "./utils/lifeCalculations";
 
-import { Calendar, Heart, Globe, Sparkles, Leaf, Sun, Moon, MessageSquare, Send, Settings, Bot, X, Clock } from 'lucide-react';
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+interface MajorEvent {
+  year: number;
+  title: string;
+  description: string;
+}
+
+import { Calendar, Sun, Moon, MessageSquare, Settings } from 'lucide-react';
 
 const MODEL_NAME = "models/gemini-2.5-flash";
 
 export default function App() {
-  const reflectionPrompts = [
-    "This week: what is one thing you want to remember?",
-    "Is there a week ahead you have been postponing for too long?",
-    "Which past week are you most grateful for?",
-    "What would you like to accomplish in the next 52 weeks?",
-    "How do you want to spend your next 100 weeks?",
-    "What patterns do you notice in how you have spent your time?"
-  ];
+
 
   const [step, setStep] = useState(1);
   const [birthDate, setBirthDate] = useState('');
-  const [lifeExpectancy, setLifeExpectancy] = useState(80);
+  const [lifeExpectancy, setLifeExpectancy] = useState<number | 'custom'>(80);
   const [customExpectancy, setCustomExpectancy] = useState('');
-  const [lifeData, setLifeData] = useState(null);
-  const [markedWeeks, setMarkedWeeks] = useState({});
-  const [selectedWeek, setSelectedWeek] = useState(null);
+  const [lifeData, setLifeData] = useState<LifeData | null>(null);
+  const [markedWeeks, setMarkedWeeks] = useState<{ [key: number]: string }>({});
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
   const [weekNote, setWeekNote] = useState('');
   const [darkMode, setDarkMode] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [currentPrompt] = useState(() => reflectionPrompts[Math.floor(Math.random() * reflectionPrompts.length)]);
+
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [showChat, setShowChat] = useState(false);
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
-  const [chatMessages, setChatMessages] = useState([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [userQuestion, setUserQuestion] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [majorEvents, setMajorEvents] = useState([]);
+  const [majorEvents, setMajorEvents] = useState<MajorEvent[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
 
   const lifeChapters = [
@@ -61,10 +66,10 @@ export default function App() {
   useEffect(() => {
     const saved = localStorage.getItem('markedWeeks');
     if (saved) setMarkedWeeks(JSON.parse(saved));
-    
+
     const darkPreference = localStorage.getItem('darkMode');
     if (darkPreference) setDarkMode(darkPreference === 'true');
-    
+
     // Only load from localStorage if no env var is set
     if (!import.meta.env.VITE_GEMINI_API_KEY) {
       const savedApiKey = localStorage.getItem('geminiApiKey');
@@ -87,119 +92,12 @@ export default function App() {
     return ist;
   };
 
-  const calculateLifeData = (birth, expectancy) => {
-    // Fix Bug 7: always treat input as IST midnight
-    const [y, m, d] = birth.split('-').map(Number);
-    const dateUTC = new Date(Date.UTC(y, m-1, d, 0, 0, 0));
-    const birthDateTime = new Date(dateUTC.getTime() + (5.5 * 3600000));
-    const now = getISTTime();
-    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const msPerYear = 365.25 * msPerDay;
-    
-    const timeDiff = now - birthDateTime;
-    
-    let years = now.getFullYear() - birthDateTime.getFullYear();
-    let months = now.getMonth() - birthDateTime.getMonth();
-    let days = now.getDate() - birthDateTime.getDate();
-    let hours = now.getHours() - birthDateTime.getHours();
-    let minutes = now.getMinutes() - birthDateTime.getMinutes();
-    let seconds = now.getSeconds() - birthDateTime.getSeconds();
-    
-    if (seconds < 0) {
-      minutes--;
-      seconds += 60;
-    }
-    if (minutes < 0) {
-      hours--;
-      minutes += 60;
-    }
-    if (hours < 0) {
-      days--;
-      hours += 24;
-    }
-    if (days < 0) {
-      months--;
-      const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-      days += prevMonth.getDate();
-    }
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
-    
-    const weeksLived = Math.floor(timeDiff / msPerWeek);
-    const daysLived = Math.floor(timeDiff / msPerDay);
-    const yearsLived = timeDiff / msPerYear;
-    const monthsLived = Math.floor(yearsLived * 12);
-    const minutesLived = Math.floor(timeDiff / (60 * 1000));
-    const secondsLived = Math.floor(timeDiff / 1000);
-    const hoursLived = Math.floor(timeDiff / (60 * 60 * 1000));
-    
-    const ageBreakdown = { years, months, days, hours, minutes, seconds };
-    
-    const totalWeeks = expectancy * 52;
-    const weeksRemaining = totalWeeks - weeksLived;
-    const percentageLived = ((weeksLived / totalWeeks) * 100).toFixed(1);
-    
-    const seasons = Math.floor(yearsLived * 4);
-    const heartBeats = Math.floor(daysLived * 24 * 60 * 60 * 1.167);
-    const breaths = Math.floor(daysLived * 24 * 60 * 16);
-    const sleepHours = Math.floor(daysLived * 8);
-    
-    const birthYear = birthDateTime.getFullYear();
-    const worldPopAtBirth = getWorldPopulation(birthYear);
-    const currentWorldPop = 8100000000;
-    
-    const avgPeopleMet = 80000;
-    const peopleMet = Math.floor((weeksLived / totalWeeks) * avgPeopleMet);
-    
-    const birthsPerYear = 140000000;
-    const deathsPerYear = 60000000;
-    const totalBirths = Math.floor(yearsLived * birthsPerYear);
-    const totalDeaths = Math.floor(yearsLived * deathsPerYear);
-    
-    const earthOrbitKm = 940000000;
-    const distanceTraveledAroundSun = Math.floor(yearsLived * earthOrbitKm);
-    const solarSystemSpeed = 720000;
-    const distanceThroughGalaxy = Math.floor(hoursLived * solarSystemSpeed);
-    
-    const lunarCycles = Math.floor(daysLived / 29.5);
-    const tripsAroundSun = Math.floor(yearsLived);
-    const sequoiaLifespan = 3000;
-    const sequoiaPercent = ((yearsLived / sequoiaLifespan) * 100).toFixed(2);
-    
-    const universeAge = 13800000000;
-    const lifespanPercent = ((yearsLived / universeAge) * 100).toFixed(10);
-    
-    return {
-      weeksLived, daysLived, yearsLived: Math.floor(yearsLived), monthsLived,
-      minutesLived, secondsLived, hoursLived, ageBreakdown, totalWeeks, weeksRemaining,
-      percentageLived, lifeExpectancy: expectancy, birthDate: birthDateTime,
-      seasons, heartBeats, breaths, sleepHours, worldPopAtBirth, currentWorldPop,
-      peopleMet, totalBirths, totalDeaths, distanceTraveledAroundSun,
-      distanceThroughGalaxy, lunarCycles, tripsAroundSun, sequoiaPercent, lifespanPercent
-    };
-  };
 
-  const getWorldPopulation = (year) => {
-    const popData = {
-      1950: 2500000000, 1960: 3000000000, 1970: 3700000000, 1980: 4400000000,
-      1990: 5300000000, 2000: 6100000000, 2005: 6500000000, 2010: 6900000000,
-      2015: 7300000000, 2020: 7800000000, 2024: 8100000000
-    };
-    
-    const years = Object.keys(popData).map(Number).sort((a, b) => a - b);
-    for (let i = 0; i < years.length; i++) {
-      if (year <= years[i]) return popData[years[i]];
-    }
-    return 8100000000;
-  };
 
   const handleSubmit = () => {
     if (birthDate) {
       const expectancy = lifeExpectancy === 'custom' ? parseInt(customExpectancy) : lifeExpectancy;
-      const data = calculateLifeData(birthDate, expectancy);
+      const data = calculateLifeData(birthDate, expectancy as number);
       setLifeData(data);
       setIsAnimating(true);
       setStep(2);
@@ -207,12 +105,13 @@ export default function App() {
     }
   };
 
-  const handleWeekClick = (weekNum) => {
+  const handleWeekClick = (weekNum: number) => {
     setSelectedWeek(weekNum);
     setWeekNote(markedWeeks[weekNum] || '');
   };
 
   const saveWeekNote = () => {
+    if (selectedWeek === null) return;
     const updated = { ...markedWeeks, [selectedWeek]: weekNote };
     setMarkedWeeks(updated);
     localStorage.setItem('markedWeeks', JSON.stringify(updated));
@@ -231,7 +130,7 @@ export default function App() {
     setShowApiKeyInput(false);
   };
 
-  const askGemini = async (question) => {
+  const askGemini = async (question: string) => {
     const apiKey = getApiKey();
     if (!apiKey) {
       setShowApiKeyInput(true);
@@ -239,7 +138,7 @@ export default function App() {
     }
 
     setIsLoading(true);
-    const userMessage = { role: 'user', content: question };
+    const userMessage: ChatMessage = { role: 'user', content: question };
     setChatMessages(prev => [...prev, userMessage]);
     setUserQuestion('');
 
@@ -280,25 +179,25 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
       }
 
       const data = await response.json();
-      
+
       if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
         throw new Error('Invalid response format from Gemini API');
       }
-      
+
       const aiResponse = data.candidates[0].content.parts[0].text;
-      
+
       setChatMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
-    } catch (error) {
-      setChatMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: `Error: ${error.message}. Please check your API key and try again.` 
+    } catch (error: any) {
+      setChatMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `Error: ${error.message}. Please check your API key and try again.`
       }]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleChatSubmit = (e) => {
+  const handleChatSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (userQuestion.trim() && !isLoading) {
       askGemini(userQuestion);
@@ -313,16 +212,16 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
     try {
       const birthYear = lifeData.birthDate.getFullYear();
       const currentYear = new Date().getFullYear();
-      
-      const prompt = `List exactly 5 major historical events that happened between ${birthYear} and ${currentYear}. 
-      These should be globally significant events like major political changes, technological breakthroughs, 
-      significant cultural moments, or major world events. 
-      
+
+      const prompt = `List exactly 5 major historical events that happened between ${birthYear} and ${currentYear}.
+      These should be globally significant events like major political changes, technological breakthroughs,
+      significant cultural moments, or major world events.
+
       Format your response as a JSON array with exactly 5 objects, each with:
       - "year": the year the event occurred (number)
       - "title": a brief title (string, max 60 characters)
       - "description": a concise description (string, max 150 characters)
-      
+
       Return ONLY valid JSON, no additional text. Example format:
       [{"year": 2001, "title": "9/11 Attacks", "description": "Terrorist attacks on the World Trade Center and Pentagon"}, ...]`;
 
@@ -346,17 +245,17 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
 
       const data = await response.json();
       const responseText = data.candidates[0].content.parts[0].text;
-      
+
       // Extract JSON from response (handle markdown code blocks if present)
       let jsonText = responseText.trim();
       if (jsonText.startsWith('```')) {
         jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       }
-      
+
       const events = JSON.parse(jsonText);
-      
+
       // Ensure we have exactly 5 events, sorted by year
-      const sortedEvents = events.slice(0, 5).sort((a, b) => a.year - b.year);
+      const sortedEvents = events.slice(0, 5).sort((a: any, b: any) => a.year - b.year);
       setMajorEvents(sortedEvents);
     } catch (error) {
       console.error('Error fetching major events:', error);
@@ -367,76 +266,12 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
     }
   };
 
-  const getWeekDate = (weekNum) => {
-    const weekMs = weekNum * 7 * 24 * 60 * 60 * 1000;
-    const weekDate = new Date(lifeData.birthDate.getTime() + weekMs);
-    // Convert to IST for display
-    const utc = weekDate.getTime() + (weekDate.getTimezoneOffset() * 60000);
-    const ist = new Date(utc + (5.5 * 3600000));
-    return ist;
-  };
 
-  const renderWeeksGrid = () => {
-    if (!lifeData) return null;
 
-    const weeks = [];
-    const isMobile = window.innerWidth < 640;
-    const weeksPerRow = isMobile ? 26 : 52;
-    const maxRows = isMobile ? 50 : 70;
-    const totalRows = Math.ceil(lifeData.totalWeeks / weeksPerRow);
-    const displayRows = Math.min(totalRows, maxRows);
 
-    for (let i = 0; i < displayRows; i++) {
-      const rowWeeks = [];
-      const yearAtRow = Math.floor((i * weeksPerRow) / 52);
-      const isChapterStart = lifeChapters.some(ch => ch.start === yearAtRow);
-      const chapter = lifeChapters.find(ch => yearAtRow >= ch.start && yearAtRow < ch.end);
-
-      for (let j = 0; j < weeksPerRow; j++) {
-        const weekNum = i * weeksPerRow + j;
-        if (weekNum < lifeData.totalWeeks) {
-          const isLived = weekNum < lifeData.weeksLived;
-          const isMarked = markedWeeks[weekNum];
-          rowWeeks.push(
-            <div
-              key={weekNum}
-              onClick={() => handleWeekClick(weekNum)}
-              className={`w-2 h-2 sm:w-2 sm:h-2 rounded-[1px] cursor-pointer transition-all duration-200 ${
-                isLived 
-                  ? darkMode 
-                    ? 'bg-white hover:bg-zinc-300' 
-                    : 'bg-black hover:bg-zinc-700'
-                  : darkMode 
-                    ? 'bg-zinc-800 hover:bg-zinc-700' 
-                    : 'bg-zinc-200 hover:bg-zinc-300'
-              } ${isMarked ? darkMode ? 'ring-1 ring-blue-400' : 'ring-1 ring-blue-500' : ''} ${isAnimating ? 'opacity-0 animate-fadeIn' : ''}`}
-              style={{ animationDelay: `${(i * weeksPerRow + j) * 0.3}ms` }}
-              title={`Week ${weekNum + 1}`}
-            />
-          );
-        }
-      }
-      
-      weeks.push(
-        <div key={i} className="flex items-center gap-4">
-          {isChapterStart && chapter && (
-            <div className={`text-[10px] sm:text-xs font-medium w-24 sm:w-28 text-right uppercase tracking-wider ${darkMode ? 'text-zinc-500' : 'text-zinc-500'}`}>
-              {chapter.label}
-            </div>
-          )}
-          {!isChapterStart && <div className="w-24 sm:w-28" />}
-          <div className="flex gap-0.5">
-            {rowWeeks}
-          </div>
-        </div>
-      );
-    }
-
-    return <div className="flex flex-col gap-0.5">{weeks}</div>;
-  };
 
   // Class and theme-related variables
-  const bgClass = darkMode ? 'bg-black' : 'bg-white';
+
   const cardBgClass = darkMode ? 'bg-zinc-900' : 'bg-zinc-50';
   const textPrimaryClass = darkMode ? 'text-white' : 'text-black';
   const textSecondaryClass = darkMode ? 'text-zinc-400' : 'text-zinc-600';
@@ -481,7 +316,7 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
                 {[70, 80, 90, 'custom'].map((val) => (
                   <button
                     key={val}
-                    onClick={() => setLifeExpectancy(val)}
+                    onClick={() => setLifeExpectancy(val as number | 'custom')}
                     className={`flex-1 px-4 py-3 text-sm font-medium border ${darkMode ? 'border-zinc-800' : 'border-zinc-200'} transition-all rounded-lg ${lifeExpectancy === val
                       ? darkMode
                         ? 'bg-white text-black border-white'
@@ -522,6 +357,8 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
       </Layout>
     );
   }
+
+  if (!lifeData) return null;
 
   return (
     <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
@@ -580,19 +417,19 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
         {/* Age Summary */}
         <AgeSummaryCard lifeData={lifeData} textPrimaryClass={textPrimaryClass} textSecondaryClass={textSecondaryClass} />
         {/* Weeks Grid */}
-        <WeeksGrid 
-          lifeData={lifeData} 
-          markedWeeks={markedWeeks} 
-          handleWeekClick={handleWeekClick} 
-          darkMode={darkMode} 
-          isAnimating={isAnimating} 
+        <WeeksGrid
+          lifeData={lifeData}
+          markedWeeks={markedWeeks}
+          handleWeekClick={handleWeekClick}
+          darkMode={darkMode}
+          isAnimating={isAnimating}
           lifeChapters={lifeChapters}
         />
         {/* Stats Section and Major Events */}
-        <StatsSection 
-          lifeData={lifeData} 
+        <StatsSection
+          lifeData={lifeData}
           darkMode={darkMode}
-          textPrimaryClass={textPrimaryClass} 
+          textPrimaryClass={textPrimaryClass}
           textSecondaryClass={textSecondaryClass}
           cardBgClass={cardBgClass}
           borderClass={borderClass}
@@ -602,7 +439,7 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
           getApiKey={getApiKey}
         />
         {/* Week Note Modal */}
-        <WeekNoteModal 
+        <WeekNoteModal
           open={selectedWeek !== null}
           selectedWeek={selectedWeek}
           weekNote={weekNote}
@@ -617,7 +454,7 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
           cardBgClass={cardBgClass}
         />
         {/* AI Chat Panel */}
-        <AiChatPanel 
+        <AiChatPanel
           open={showChat}
           chatMessages={chatMessages}
           userQuestion={userQuestion}
@@ -632,7 +469,7 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
           borderClass={borderClass}
         />
         {/* Gemini API Key Modal */}
-        <ApiKeyModal 
+        <ApiKeyModal
           open={showApiKeyInput}
           geminiApiKey={geminiApiKey}
           setGeminiApiKey={setGeminiApiKey}

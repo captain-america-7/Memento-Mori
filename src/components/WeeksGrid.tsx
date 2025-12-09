@@ -53,7 +53,7 @@ const WeeksGrid: React.FC<WeeksGridProps> = (props) => {
         {/* Weeks rows */}
         {Array.from({ length: rows }).map((_, rowIdx) => {
           const rowStartWeek = rowIdx * weeksPerRow;
-          const weeksThisRow = Math.min(weeksPerRow, totalWeeks - rowStartWeek);
+
           const chapter = getChapterForRow(rowIdx);
           const chapterLabel = isChapterStart(rowIdx) && chapter ? chapter.label : "";
           return (
