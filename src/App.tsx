@@ -2,7 +2,14 @@
 
 
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import Layout from "./components/Layout";
+import AgeSummaryCard from "./components/AgeSummaryCard";
+import WeeksGrid from "./components/WeeksGrid";
+import StatsSection from "./components/StatsSection";
+import WeekNoteModal from "./components/WeekNoteModal";
+import AiChatPanel from "./components/AiChatPanel";
+import ApiKeyModal from "./components/ApiKeyModal";
 
 import { Calendar, Heart, Globe, Sparkles, Leaf, Sun, Moon, MessageSquare, Send, Settings, Bot, X, Clock } from 'lucide-react';
 
@@ -426,6 +433,7 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
     return <div className="flex flex-col gap-0.5">{weeks}</div>;
   };
 
+  // Class and theme-related variables
   const bgClass = darkMode ? 'bg-black' : 'bg-white';
   const cardBgClass = darkMode ? 'bg-zinc-900' : 'bg-zinc-50';
   const textPrimaryClass = darkMode ? 'text-white' : 'text-black';
@@ -434,17 +442,8 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
 
   if (step === 1) {
     return (
-      <div className={`min-h-screen ${bgClass} flex items-center justify-center p-4 sm:p-8 transition-colors duration-300`}>
+      <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
         <div className="w-full max-w-md">
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={toggleDarkMode}
-              className={`p-2 rounded-full ${darkMode ? 'text-neutral-400 hover:text-neutral-200' : 'text-neutral-600 hover:text-neutral-900'} transition-colors`}
-            >
-              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-          </div>
-
           <div className="text-center mb-12 sm:mb-16">
             <Calendar className={`w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-4 sm:mb-6 ${darkMode ? 'text-neutral-300' : 'text-neutral-800'}`} strokeWidth={1.5} />
             <h1 className={`text-2xl sm:text-3xl font-light ${textPrimaryClass} mb-3 sm:mb-4`}>
@@ -518,12 +517,12 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
             </button>
           </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className={`min-h-screen ${bgClass} p-4 sm:p-8 md:p-12 transition-colors duration-300`}>
+    <Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(2px); }
@@ -576,389 +575,76 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
           </div>
         </div>
 
-        <div className={`${cardBgClass} p-8 sm:p-12 mb-8 transition-colors duration-300 rounded-2xl`}>
-          <h2 className={`text-2xl sm:text-3xl font-semibold ${textPrimaryClass} mb-6 animate-fadeIn tracking-tight`}>
-            You are precisely
-          </h2>
-          
-          <div className={`mb-8 text-base sm:text-lg ${textSecondaryClass} font-normal animate-fadeIn leading-relaxed`}>
-            {lifeData.ageBreakdown.years} {lifeData.ageBreakdown.years === 1 ? 'year' : 'years'}, {lifeData.ageBreakdown.months} {lifeData.ageBreakdown.months === 1 ? 'month' : 'months'}, {lifeData.ageBreakdown.days} {lifeData.ageBreakdown.days === 1 ? 'day' : 'days'}, {lifeData.ageBreakdown.hours} {lifeData.ageBreakdown.hours === 1 ? 'hour' : 'hours'}, {lifeData.ageBreakdown.minutes} {lifeData.ageBreakdown.minutes === 1 ? 'minute' : 'minutes'}, and {lifeData.ageBreakdown.seconds} {lifeData.ageBreakdown.seconds === 1 ? 'second' : 'seconds'} old
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
-            {[
-              { value: lifeData.yearsLived, label: 'years' },
-              { value: lifeData.monthsLived, label: 'months' },
-              { value: lifeData.daysLived, label: 'days' },
-              { value: lifeData.weeksLived, label: 'weeks' }
-            ].map((stat, i) => (
-              <div key={stat.label} className="space-y-2 animate-countUp" style={{ animationDelay: `${i * 100}ms` }}>
-                <div className={`text-3xl sm:text-4xl font-semibold ${textPrimaryClass} tracking-tight`}>
-                  {stat.value.toLocaleString()}
-                </div>
-                <div className={`text-xs sm:text-sm ${textSecondaryClass} font-medium uppercase tracking-wider`}>
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className={`${cardBgClass} p-8 sm:p-12 mb-8 transition-colors duration-300 rounded-2xl`}>
-          <div className="mb-10">
-            <div className="text-center mb-6">
-              <p className={`text-xs sm:text-sm ${textSecondaryClass} font-medium tracking-tight`}>
-                Week {lifeData.weeksLived.toLocaleString()} of {lifeData.totalWeeks.toLocaleString()}
-              </p>
-            </div>
-            <h2 className={`text-xl sm:text-2xl font-semibold ${textPrimaryClass} mb-3 tracking-tight`}>
-              Your life visualized
-            </h2>
-            <p className={`text-sm sm:text-base ${textSecondaryClass} font-normal mb-4 leading-relaxed max-w-2xl`}>
-              Each square represents one week. Click any week to mark it as meaningful.
-            </p>
-            <p className={`text-sm sm:text-base ${textPrimaryClass} font-normal italic leading-relaxed max-w-2xl`}>
-              {currentPrompt}
-            </p>
-          </div>
-
-          <div className="overflow-x-auto">
-            <div className="inline-block min-w-full">
-              {renderWeeksGrid()}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-6 sm:space-y-8 mb-6 sm:mb-8">
-          {[
-            { icon: Heart, title: 'Life highlights', content: [
-              `That's ${lifeData.daysLived.toLocaleString()} days of experience and approximately ${lifeData.seasons} seasons observed.`,
-              `Your heart has beaten approximately ${lifeData.heartBeats.toLocaleString()} times.`,
-              `You've taken around ${lifeData.breaths.toLocaleString()} breaths and slept about ${lifeData.sleepHours.toLocaleString()} hours.`
-            ]},
-            { icon: Globe, title: 'Societal context', content: [
-              `During your lifetime, humanity's population has grown from approximately ${(lifeData.worldPopAtBirth / 1000000000).toFixed(1)} billion to over ${(lifeData.currentWorldPop / 1000000000).toFixed(1)} billion people.`,
-              `The average person will meet around 80,000 people in their lifetime. You've likely already met approximately ${lifeData.peopleMet.toLocaleString()} individuals.`,
-              `Since your birth, humanity has collectively experienced approximately ${lifeData.totalBirths.toLocaleString()} births and ${lifeData.totalDeaths.toLocaleString()} deaths.`
-            ]},
-            { icon: Sparkles, title: 'Cosmic perspective', content: [
-              `Since your birth, Earth has traveled approximately ${lifeData.distanceTraveledAroundSun.toLocaleString()} kilometers through space around the Sun.`,
-              `The observable universe is about 93 billion light-years across. Your entire lifespan is just ${lifeData.lifespanPercent}% of the universe's age.`,
-              `During your lifetime, our solar system has moved about ${lifeData.distanceThroughGalaxy.toLocaleString()} kilometers through the Milky Way galaxy.`
-            ]},
-            { icon: Leaf, title: 'Natural world', content: [
-              `You've experienced approximately ${lifeData.lunarCycles} lunar cycles and ${lifeData.tripsAroundSun} trips around the Sun.`,
-              `A giant sequoia tree can live over 3,000 years. Your current age is ${lifeData.sequoiaPercent}% of its potential lifespan.`,
-              `During your lifetime, your body has replaced most of its cells several times. You are not made of the same atoms you were born with.`
-            ]}
-          ].map((section, i) => (
-            <div key={section.title} className={`${cardBgClass} p-8 sm:p-10 transition-colors duration-300 animate-fadeIn rounded-2xl`} style={{ animationDelay: `${i * 100}ms` }}>
-              <div className="flex items-center gap-3 mb-6">
-                <section.icon className={`w-5 h-5 ${textPrimaryClass}`} strokeWidth={2} />
-                <h3 className={`text-xl sm:text-2xl font-semibold ${textPrimaryClass} tracking-tight`}>
-                  {section.title}
-                </h3>
-              </div>
-              <div className={`space-y-4 text-sm sm:text-base ${textSecondaryClass} font-normal leading-relaxed`}>
-                {section.content.map((text, j) => (
-                  <p key={j}>{text}</p>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Major Events Section */}
-        {getApiKey() && (
-          <div className={`${cardBgClass} p-8 sm:p-10 mb-8 transition-colors duration-300 animate-fadeIn rounded-2xl`}>
-            <div className="flex items-center gap-3 mb-6">
-              <Clock className={`w-5 h-5 ${textPrimaryClass}`} strokeWidth={2} />
-              <h3 className={`text-xl sm:text-2xl font-semibold ${textPrimaryClass} tracking-tight`}>
-                Major Events in Your Lifetime
-              </h3>
-            </div>
-            
-            {isLoadingEvents ? (
-              <div className={`flex items-center justify-center py-8 ${textSecondaryClass}`}>
-                <div className="flex gap-2">
-                  <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                  <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                  <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                </div>
-                <span className="ml-3 text-sm">Loading major events...</span>
-              </div>
-            ) : majorEvents.length > 0 ? (
-              <div className="space-y-4">
-                {majorEvents.map((event, idx) => (
-                  <div key={idx} className={`border-l-2 ${darkMode ? 'border-zinc-700' : 'border-zinc-300'} pl-4 py-2`}>
-                    <div className="flex items-start gap-3">
-                      <div className={`text-lg sm:text-xl font-semibold ${textPrimaryClass} min-w-[60px]`}>
-                        {event.year}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className={`text-base sm:text-lg font-semibold ${textPrimaryClass} mb-1`}>
-                          {event.title}
-                        </h4>
-                        <p className={`text-sm sm:text-base ${textSecondaryClass} leading-relaxed`}>
-                          {event.description}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className={`text-center py-8 ${textSecondaryClass}`}>
-                <p className="text-sm">
-                  Unable to load major events. Please check your API key.
-                </p>
-                <button
-                  onClick={fetchMajorEvents}
-                  className={`mt-4 px-4 py-2 text-sm border ${borderClass} rounded-xl hover:${textPrimaryClass} transition-colors`}
-                >
-                  Retry
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        <p className={`text-xs ${textSecondaryClass} font-light text-center`}>
-          Based on your planning number of {lifeData.lifeExpectancy} years ({lifeData.totalWeeks.toLocaleString()} weeks)
-        </p>
+        {/* Age Summary */}
+        <AgeSummaryCard lifeData={lifeData} textPrimaryClass={textPrimaryClass} textSecondaryClass={textSecondaryClass} />
+        {/* Weeks Grid */}
+        <WeeksGrid 
+          lifeData={lifeData} 
+          markedWeeks={markedWeeks} 
+          handleWeekClick={handleWeekClick} 
+          darkMode={darkMode} 
+          isAnimating={isAnimating} 
+          lifeChapters={lifeChapters}
+        />
+        {/* Stats Section and Major Events */}
+        <StatsSection 
+          lifeData={lifeData} 
+          darkMode={darkMode}
+          textPrimaryClass={textPrimaryClass} 
+          textSecondaryClass={textSecondaryClass}
+          cardBgClass={cardBgClass}
+          borderClass={borderClass}
+          majorEvents={majorEvents}
+          isLoadingEvents={isLoadingEvents}
+          fetchMajorEvents={fetchMajorEvents}
+          getApiKey={getApiKey}
+        />
+        {/* Week Note Modal */}
+        <WeekNoteModal 
+          open={selectedWeek !== null}
+          selectedWeek={selectedWeek}
+          weekNote={weekNote}
+          onChange={setWeekNote}
+          onSave={saveWeekNote}
+          onClose={() => setSelectedWeek(null)}
+          lifeData={lifeData}
+          darkMode={darkMode}
+          borderClass={borderClass}
+          textPrimaryClass={textPrimaryClass}
+          textSecondaryClass={textSecondaryClass}
+          cardBgClass={cardBgClass}
+        />
+        {/* AI Chat Panel */}
+        <AiChatPanel 
+          open={showChat}
+          chatMessages={chatMessages}
+          userQuestion={userQuestion}
+          setUserQuestion={setUserQuestion}
+          isLoading={isLoading}
+          handleSubmit={handleChatSubmit}
+          onClose={() => setShowChat(false)}
+          darkMode={darkMode}
+          textPrimaryClass={textPrimaryClass}
+          textSecondaryClass={textSecondaryClass}
+          cardBgClass={cardBgClass}
+          borderClass={borderClass}
+        />
+        {/* Gemini API Key Modal */}
+        <ApiKeyModal 
+          open={showApiKeyInput}
+          geminiApiKey={geminiApiKey}
+          setGeminiApiKey={setGeminiApiKey}
+          onSave={saveApiKey}
+          onClear={() => { setGeminiApiKey(''); localStorage.removeItem('geminiApiKey'); setShowApiKeyInput(false); }}
+          onClose={() => setShowApiKeyInput(false)}
+          darkMode={darkMode}
+          borderClass={borderClass}
+          textPrimaryClass={textPrimaryClass}
+          textSecondaryClass={textSecondaryClass}
+          cardBgClass={cardBgClass}
+        />
       </div>
-
-      {selectedWeek !== null && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className={`${cardBgClass} p-6 rounded-2xl max-w-md w-full`}>
-            <h3 className={`text-xl font-semibold ${textPrimaryClass} mb-4 tracking-tight`}>
-              Week {selectedWeek + 1}
-            </h3>
-            <p className={`text-sm ${textSecondaryClass} font-normal mb-6`}>
-              {getWeekDate(selectedWeek).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-            </p>
-            <label className={`block text-sm font-medium ${textPrimaryClass} mb-3`}>
-              What made this week meaningful?
-            </label>
-            <textarea
-              value={weekNote}
-              onChange={(e) => setWeekNote(e.target.value)}
-              className={`w-full px-4 py-3 border ${borderClass} ${textPrimaryClass} ${cardBgClass} text-sm font-normal rounded-xl focus:outline-none focus:ring-2 ${darkMode ? 'focus:ring-white' : 'focus:ring-black'} transition-all resize-none`}
-              rows={3}
-              placeholder="Optional note..."
-            />
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={saveWeekNote}
-                className={`flex-1 px-4 py-3 ${darkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-black text-white hover:bg-zinc-800'} text-sm font-medium transition-all rounded-xl`}
-              >
-                Save
-              </button>
-              <button
-                onClick={() => setSelectedWeek(null)}
-                className={`flex-1 px-4 py-3 border ${borderClass} ${textSecondaryClass} hover:${textPrimaryClass} text-sm font-medium transition-all rounded-xl`}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Chat Panel */}
-      {showChat && (
-        <div className={`fixed bottom-4 right-4 w-[calc(100%-2rem)] sm:w-full max-w-md h-[500px] sm:h-[600px] ${cardBgClass} rounded-2xl shadow-2xl flex flex-col z-50 border ${borderClass} transition-all duration-300`}>
-          <div className={`flex items-center justify-between p-4 border-b ${borderClass}`}>
-            <div className="flex items-center gap-3">
-              <Bot className={`w-5 h-5 ${textPrimaryClass}`} />
-              <h3 className={`text-lg font-semibold ${textPrimaryClass}`}>
-                AI Insights
-              </h3>
-            </div>
-            <button
-              onClick={() => setShowChat(false)}
-              className={`p-1 rounded-full ${textSecondaryClass} hover:${textPrimaryClass} transition-colors`}
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {chatMessages.length === 0 ? (
-              <div className={`text-center py-4 ${textSecondaryClass}`}>
-                <Bot className={`w-12 h-12 mx-auto mb-4 ${textSecondaryClass} opacity-50`} />
-                <p className="text-sm font-light mb-4">
-                  Ask me anything about your life, time, or mortality.
-                </p>
-                <p className="text-xs mb-4 opacity-75">
-                  I'll provide insights based on your life data.
-                </p>
-                <div className="space-y-2 mt-6">
-                  <p className={`text-xs ${textSecondaryClass} font-medium mb-2`}>Try asking:</p>
-                  {[
-                    "What should I focus on with my remaining time?",
-                    "How can I make the most of my weeks?",
-                    "What patterns do you notice in my life?",
-                    "How should I think about my mortality?"
-                  ].map((suggestion, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setUserQuestion(suggestion);
-                        setTimeout(() => askGemini(suggestion), 100);
-                      }}
-                      className={`block w-full text-left px-3 py-2 text-xs rounded-lg border ${borderClass} ${darkMode ? 'hover:bg-zinc-800' : 'hover:bg-zinc-100'} transition-colors ${textSecondaryClass}`}
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              chatMessages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-xl px-4 py-3 ${
-                      msg.role === 'user'
-                        ? darkMode
-                          ? 'bg-white text-black'
-                          : 'bg-black text-white'
-                        : `${cardBgClass} border ${borderClass} ${textPrimaryClass}`
-                    }`}
-                  >
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                  </div>
-                </div>
-              ))
-            )}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className={`${cardBgClass} border ${borderClass} rounded-xl px-4 py-3 ${textSecondaryClass}`}>
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                    <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                    <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <form onSubmit={handleChatSubmit} className={`p-4 border-t ${borderClass}`}>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={userQuestion}
-                onChange={(e) => setUserQuestion(e.target.value)}
-                placeholder="Ask a question..."
-                disabled={isLoading}
-                className={`flex-1 px-4 py-2 border ${borderClass} ${textPrimaryClass} ${cardBgClass} text-sm rounded-xl focus:outline-none focus:ring-2 ${darkMode ? 'focus:ring-white' : 'focus:ring-black'} transition-all disabled:opacity-50`}
-              />
-              <button
-                type="submit"
-                disabled={!userQuestion.trim() || isLoading}
-                className={`p-2 ${darkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-black text-white hover:bg-zinc-800'} rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* API Key Input Modal */}
-      {showApiKeyInput && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className={`${cardBgClass} p-6 rounded-2xl max-w-md w-full`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={`text-xl font-semibold ${textPrimaryClass} tracking-tight`}>
-                Gemini API Key
-              </h3>
-              <button
-                onClick={() => setShowApiKeyInput(false)}
-                className={`p-1 rounded-full ${textSecondaryClass} hover:${textPrimaryClass} transition-colors`}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            
-            {import.meta.env.VITE_GEMINI_API_KEY ? (
-              <div className={`mb-4 p-4 rounded-xl ${darkMode ? 'bg-green-900/20 border-green-500/30' : 'bg-green-50 border-green-200'} border ${borderClass}`}>
-                <p className={`text-xs ${darkMode ? 'text-green-400' : 'text-green-700'} mb-1 font-medium flex items-center gap-2`}>
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  API key loaded from environment variable
-                </p>
-                <p className={`text-xs ${textSecondaryClass} mt-2`}>
-                  Your API key is set via <code className="px-1 py-0.5 rounded bg-black/10 dark:bg-white/10">VITE_GEMINI_API_KEY</code> in your <code className="px-1 py-0.5 rounded bg-black/10 dark:bg-white/10">.env</code> file.
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className={`mb-4 p-4 rounded-xl ${darkMode ? 'bg-zinc-800' : 'bg-zinc-100'} border ${borderClass}`}>
-                  <p className={`text-xs ${textSecondaryClass} mb-2 font-medium`}>
-                    Option 1: Environment Variable (Recommended for development)
-                  </p>
-                  <p className={`text-xs ${textSecondaryClass} mb-3`}>
-                    Create a <code className="px-1 py-0.5 rounded bg-black/10 dark:bg-white/10">.env</code> file in the project root with:
-                  </p>
-                  <code className={`block text-xs p-2 rounded ${darkMode ? 'bg-zinc-900' : 'bg-white'} ${textPrimaryClass} mb-3`}>
-                    VITE_GEMINI_API_KEY=your_api_key_here
-                  </code>
-                  <p className={`text-xs ${textSecondaryClass} mb-3 font-medium`}>
-                    Option 2: Manual Entry
-                  </p>
-                  <ol className={`text-xs ${textSecondaryClass} space-y-1 list-decimal list-inside`}>
-                    <li>Visit <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a></li>
-                    <li>Sign in with your Google account</li>
-                    <li>Click "Create API Key"</li>
-                    <li>Copy and paste it below</li>
-                  </ol>
-                </div>
-
-                <label className={`block text-sm font-medium ${textPrimaryClass} mb-2`}>
-                  API Key
-                </label>
-                <input
-                  type="password"
-                  value={geminiApiKey}
-                  onChange={(e) => setGeminiApiKey(e.target.value)}
-                  placeholder="Enter your Gemini API key"
-                  className={`w-full px-4 py-3 border ${borderClass} ${textPrimaryClass} ${cardBgClass} text-sm font-normal rounded-xl focus:outline-none focus:ring-2 ${darkMode ? 'focus:ring-white' : 'focus:ring-black'} transition-all mb-4`}
-                />
-                <p className={`text-xs ${textSecondaryClass} mb-4 font-light`}>
-                  Your API key is stored locally and never shared.
-                </p>
-              </>
-            )}
-            
-            {!import.meta.env.VITE_GEMINI_API_KEY && (
-              <div className="flex gap-3">
-                <button
-                  onClick={saveApiKey}
-                  disabled={!geminiApiKey.trim()}
-                  className={`flex-1 px-4 py-3 ${darkMode ? 'bg-white text-black hover:bg-zinc-200' : 'bg-black text-white hover:bg-zinc-800'} text-sm font-medium transition-all rounded-xl disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => {
-                    setGeminiApiKey('');
-                    localStorage.removeItem('geminiApiKey');
-                    setShowApiKeyInput(false);
-                  }}
-                  className={`flex-1 px-4 py-3 border ${borderClass} ${textSecondaryClass} hover:${textPrimaryClass} text-sm font-medium transition-all rounded-xl`}
-                >
-                  Clear
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+    </Layout>
   );
 }
 
