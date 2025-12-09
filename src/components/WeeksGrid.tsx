@@ -37,30 +37,16 @@ const WeeksGrid: React.FC<WeeksGridProps> = (props) => {
 
   const rows = Math.ceil(totalItems / itemsPerRow);
 
-  // Chapter logic per row
-  function getYearAtRow(rowIdx: number) {
+  // Calculate label for the row (Age)
+  function getRowLabel(rowIdx: number) {
     if (props.viewMode === 'years') {
-      return rowIdx * 10; // Each row is a decade
+      return `${rowIdx * 10}`; // Decade start
     }
     if (props.viewMode === 'months') {
-      return rowIdx; // Each row is a year
+      return `${rowIdx}`; // Year
     }
-    return Math.floor((rowIdx * itemsPerRow) / 52);
-  }
-
-  function getChapterForRow(rowIdx: number) {
-    const yearAtRow = getYearAtRow(rowIdx);
-    return props.lifeChapters.find(
-      (ch) => yearAtRow >= ch.start && yearAtRow < ch.end
-    );
-  }
-  function isChapterStart(rowIdx: number) {
-    const yearAtRow = getYearAtRow(rowIdx);
-    // For years view, show chapter if the decade overlaps with chapter start
-    if (props.viewMode === 'years') {
-      return props.lifeChapters.some((ch) => ch.start >= yearAtRow && ch.start < yearAtRow + 10);
-    }
-    return props.lifeChapters.some((ch) => ch.start === yearAtRow);
+    // For weeks view, calculate the year based on row index
+    return `${Math.floor((rowIdx * itemsPerRow) / 52)}`;
   }
 
   // Actual rendering
@@ -86,17 +72,7 @@ const WeeksGrid: React.FC<WeeksGridProps> = (props) => {
         {Array.from({ length: rows }).map((_, rowIdx) => {
           const rowStartItem = rowIdx * itemsPerRow;
 
-          const chapter = getChapterForRow(rowIdx);
-          let chapterLabel = "";
-
-          if (props.viewMode === 'years') {
-            // For years view, simplified chapter logic or just show decade label
-            const year = rowIdx * 10;
-            const matchingChapter = props.lifeChapters.find(ch => ch.start === year);
-            if (matchingChapter) chapterLabel = matchingChapter.label;
-          } else {
-            chapterLabel = isChapterStart(rowIdx) && chapter ? chapter.label : "";
-          }
+          const rowLabel = getRowLabel(rowIdx);
 
           return (
             <div
@@ -108,8 +84,7 @@ const WeeksGrid: React.FC<WeeksGridProps> = (props) => {
               }}
             >
               <div className={`text-[8px] sm:text-[10px] font-medium w-full text-right uppercase tracking-wider pr-2 ${props.darkMode ? 'text-zinc-500' : 'text-zinc-500'}`.trim()}>
-                {chapterLabel && <span className="hidden sm:inline">{chapterLabel}</span>}
-                {chapterLabel && <span className="sm:hidden">{chapterLabel.substring(0, 1)}</span>}
+                {rowLabel}
               </div>
               {Array.from({ length: itemsPerRow }).map((_, itemOfRowIdx) => {
                 const itemNum = rowStartItem + itemOfRowIdx;
