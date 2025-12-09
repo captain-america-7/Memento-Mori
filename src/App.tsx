@@ -40,6 +40,7 @@ export default function App() {
   const [weekNote, setWeekNote] = useState('');
   const [darkMode, setDarkMode] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [viewMode, setViewMode] = useState<'weeks' | 'months' | 'years'>('weeks');
 
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [showChat, setShowChat] = useState(false);
@@ -408,6 +409,28 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
           </div>
         </div>
 
+        {/* View Mode Toggle */}
+        <div className="flex justify-center mb-6">
+          <div className={`flex p-1 rounded-lg ${darkMode ? 'bg-zinc-900' : 'bg-zinc-100'}`}>
+            {(['weeks', 'months', 'years'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className={`px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all capitalize ${viewMode === mode
+                    ? darkMode
+                      ? 'bg-zinc-800 text-white shadow-sm'
+                      : 'bg-white text-black shadow-sm'
+                    : darkMode
+                      ? 'text-zinc-500 hover:text-zinc-300'
+                      : 'text-zinc-500 hover:text-zinc-700'
+                  }`}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Age Summary */}
         <AgeSummaryCard lifeData={lifeData} textPrimaryClass={textPrimaryClass} textSecondaryClass={textSecondaryClass} />
         {/* Weeks Grid */}
@@ -418,6 +441,7 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
           darkMode={darkMode}
           isAnimating={isAnimating}
           lifeChapters={lifeChapters}
+          viewMode={viewMode}
         />
         {/* Stats Section and Major Events */}
         <StatsSection
