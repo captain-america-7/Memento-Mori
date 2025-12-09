@@ -23,7 +23,7 @@ interface MajorEvent {
   description: string;
 }
 
-import { Calendar, Sun, Moon, MessageSquare, Settings } from 'lucide-react';
+import { Calendar, Sun, Moon, MessageSquare, Settings, Printer } from 'lucide-react';
 
 const MODEL_NAME = "models/gemini-2.5-flash";
 
@@ -372,6 +372,17 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
         .animate-countUp {
           animation: countUp 0.5s ease-out;
         }
+        @media print {
+          @page { margin: 2cm; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .no-print { display: none !important; }
+          button { display: none !important; }
+          /* Force light mode colors for print */
+          .bg-zinc-900 { background-color: white !important; color: black !important; }
+          .text-white { color: black !important; }
+          .text-zinc-400 { color: #52525b !important; }
+          .border-zinc-800 { border-color: #e4e4e7 !important; }
+        }
       `}</style>
 
       <div className="max-w-6xl mx-auto">
@@ -382,7 +393,14 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
           >
             ← Change birth date
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 no-print">
+            <button
+              onClick={() => window.print()}
+              className={`p-2 rounded-full ${darkMode ? 'text-neutral-400 hover:text-neutral-200' : 'text-neutral-600 hover:text-neutral-900'} transition-colors`}
+              title="Print"
+            >
+              <Printer className="w-4 h-4" />
+            </button>
             <button
               onClick={() => setShowChat(!showChat)}
               className={`p-2 rounded-full ${darkMode ? 'text-neutral-400 hover:text-neutral-200' : 'text-neutral-600 hover:text-neutral-900'} transition-colors relative`}
@@ -410,19 +428,19 @@ Provide thoughtful, empathetic, and meaningful insights. Be concise but profound
         </div>
 
         {/* View Mode Toggle */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-6 no-print">
           <div className={`flex p-1 rounded-lg ${darkMode ? 'bg-zinc-900' : 'bg-zinc-100'}`}>
             {(['weeks', 'months', 'years'] as const).map((mode) => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
                 className={`px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all capitalize ${viewMode === mode
-                    ? darkMode
-                      ? 'bg-zinc-800 text-white shadow-sm'
-                      : 'bg-white text-black shadow-sm'
-                    : darkMode
-                      ? 'text-zinc-500 hover:text-zinc-300'
-                      : 'text-zinc-500 hover:text-zinc-700'
+                  ? darkMode
+                    ? 'bg-zinc-800 text-white shadow-sm'
+                    : 'bg-white text-black shadow-sm'
+                  : darkMode
+                    ? 'text-zinc-500 hover:text-zinc-300'
+                    : 'text-zinc-500 hover:text-zinc-700'
                   }`}
               >
                 {mode}
